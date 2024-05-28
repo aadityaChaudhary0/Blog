@@ -2,10 +2,14 @@ import { Link } from "react-router-dom";
 import { Form, useForm } from "react-hook-form";
 import { useState } from "react";
 import Editor from 'react-simple-wysiwyg';
+import { ToastContainer, toast } from 'react-toastify';
+
 
 function CreateBlog() {
       
       const [html, setHtml] = useState('');
+      const [image, setImage] = useState(null);
+
   
       function onChange(e) {
             setHtml(e.target.value);
@@ -16,21 +20,38 @@ function CreateBlog() {
             formState : {errors},
       } = useForm();
 
-      const formSubmit = async (e) => {
-            const newData = { ...e, description: html };
-            // e.preventDefault();
-           const res = await fetch('http://localhost:8000/api/blogs', {
-                  method: 'POST',
-                  headers: {
-                        'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(newData),
+      function handleImageChange(e) {
+            setImage(e.target.files[0]);
+        }
+      const formSubmit = async (data) => {
+            const formData = new FormData();
+            formData.append('title', data.title);
+            formData.append('author', data.author);
+            formData.append('description', html);
+            if (image) {
+                formData.append('image', image);
+            }
+    
+            const res = await fetch('http://localhost:8000/api/blogs', {
+                method: 'POST',
+                body: formData,
             });
-      }
+    
+            if (res.ok) {
+                const result = await res.json();
+                toast.success(result.message, {
+                });
+                
+            } else {
+                alert('Error:');
+            }
+        };
 
 
   return (
     <>
+            <ToastContainer />
+
       <div className="container m-auto"> 
             <div className="flex justify-between items-center pt-6">
                   <h2>Create Blog</h2>
@@ -68,7 +89,7 @@ function CreateBlog() {
                   <div className="flex flex-col gap-1">
                         <p>Image</p>
                         <div className="flex items-center gap-2">
-                              <input type="file" />
+                        <input type="file" name="image" onChange={handleImageChange} />
                         </div>
                   </div>
 
